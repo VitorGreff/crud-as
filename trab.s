@@ -375,6 +375,7 @@ leReg:
 
     RET
 
+
 limpaScanf:
 	# LIMPA BUFFER DE LEITURA DAS FUNÇÕES SCANF E FGETS	
 
