@@ -17,6 +17,7 @@
     msgAluguel:             .asciz  "\nQual o valor do aluguel? " #4bytes
     
     msgSemRegs:             .asciz  "\nNão há registros\n"
+    msgPedeReg:             .asciz  "\nDigite um número de quartos para consulta: "
 
     msgNumReg:              .asciz  "\nRegistro: %d"
     mostraNome:             .asciz  "\nNome:    %s"
@@ -59,12 +60,11 @@
     op:                     .int   0
     removeReg:              .int   0
     limpaScan:              .space 10
-
     tamList:                .int   0
 
 	head:			        .space  4	# cabeça da lista
 	inicioReg:			    .space	4	# campo inicial do registro que está sendo inserido no momento
-	regConsultaAtual:	    .space  4 	# registro que está sendo consultado
+	regAtual:       	    .space  4 	# registro que está sendo consultado
 	pai:					.space	4	# registro antecessor 
 	filho:					.space	4	# registro sucessor
 	enderecoRemove:			.space 	4	# endereço do registro para remover
@@ -76,8 +76,7 @@
 	posicaoAtual: 		    .int	0	
 	iteracao:			    .int	0	# número da iteração atual, será usada na remoção
 	nomeArq:			    .asciz	"registros.txt"
-	comodosParaConsultar:   .int	0
-	totalComodos:		    .int	0
+	nQuartosConsulta:       .int	0
 
     SYS_EXIT: 	            .int 1
 	SYS_FORK: 	            .int 2
@@ -145,7 +144,7 @@ menuOpcoes:
     cmpl    $3, op
     je      _removeReg
 
-    # RELATIRO
+    # RELATORIO
     cmpl    $4, op
     je      _mostraRelatorio
 
@@ -173,7 +172,9 @@ menuOpcoes:
         call    leReg
         jmp     menuOpcoes
     _consultaReg:   
-        RET
+        call    limpaScanf
+        call    consulta
+        jmp     menuOpcoes
     _removeReg:
         RET
     _mostraRelatorio:
@@ -185,9 +186,10 @@ menuOpcoes:
     _recuperaReg:
         RET
 
+
 insereEOrdena:
     movl    inicioReg, %ecx             # endereço do primeiro registro
-    addl    bytesAteQuartos , %ecx       # somamos 124 ao endereço para termos o número de quartos na posição
+    addl    bytesAteQuartos , %ecx       
     
     movl    $0, %ebx
     movl    head, %edi
@@ -320,20 +322,26 @@ leReg:
     # CELULAR
 
     pushl	%edi
-
+    
     pushl	$msgCelular
     call	printf
-    addl	$4, %esp 
-    popl 	%edi
+    addl	$4, %esp
+
+    pushl	$tipoNum
+    call	scanf
+
+    addl	$4, %esp
+    popl	%edi
+    movl	(%edi),%eax
+    movl	%eax, tamCelular
+
+    addl	tamCelular, %edi
     
     pushl	stdin
-    pushl	tamCelular
-    pushl	%edi
+    pushl	$20
+    pushl	$limpaScan
     call	fgets
-
-    popl	%edi
-    addl 	$8, %esp
-    addl 	tamCelular, %edi 
+    addl	$12, %esp
 
     # TIPO DE IMÓVEL (CASA OU APARTAMENTO)
 
@@ -381,7 +389,6 @@ leReg:
     # BAIRRO
 
     pushl	%edi
-
     pushl	$msgBairro
     call	printf
     addl	$4, %esp 
@@ -411,7 +418,6 @@ leReg:
     popl	%edi
     movl	(%edi),%eax
     movl	%eax, totalQuartos
-
     addl	tamQuartos, %edi
 
     pushl	stdin
@@ -510,6 +516,7 @@ leReg:
     movl 	$0, %eax
     movl   	%eax, (%edi)
 
+    movl    inicioReg, %edi
     call    insereEOrdena
     RET
 
@@ -523,6 +530,136 @@ limpaScanf:
 	addl    $8, %esp 
 	RET
 
+consulta:
+    pushl   $msgPedeReg
+    call    printf
+    addl    $4, %esp
+
+    pushl   $nQuartosConsulta
+    pushl   $tipoNum
+    call    scanf
+    addl   $8, %esp
+
+    movl    head, %edi
+    cmpl    $0, %edi
+    je      _fimConsulta
+
+    movl    %edi, regAtual
+    
+    _loopConsulta:
+        movl    regAtual, %edi
+        movl    $0, %eax
+        addl    bytesAteQuartos, %edi
+        movl    (%edi), %eax
+        movl    %eax, totalQuartos
+
+        cmpl    nQuartosConsulta, %eax
+        je      _mostraReg
+
+    _maisUmReg:
+        movl    regAtual, %edi
+        addl    bytesAteProximo, %edi
+        cmpl    $0, (%edi)
+        je      _fimConsulta
+
+        movl    (%edi), %ecx
+        movl    %ecx, regAtual
+        jmp     _loopConsulta
+
+    _mostraReg:
+        movl    regAtual, %edi
+
+        #Nome
+        pushl   %edi
+        pushl   $mostraNome
+        call    printf
+        addl    $8, %esp
+        addl    tamNome, %edi
+
+        #Celular
+        pushl   (%edi)
+        pushl   $mostraCelular
+        call    printf
+        addl    $8, %esp
+        addl    tamCelular, %edi
+
+        #Tipo Imovel
+        pushl   %edi
+        pushl   $mostraTipoImovel
+        call    printf
+        addl    $8, %esp
+        addl    tamTipoImovel, %edi
+
+        #Endereço
+        pushl   $mostraEndereco
+        call    printf
+        addl    $4, %esp
+
+        #Cidade
+        pushl   %edi
+        pushl   $mostraCidade
+        call    printf
+        addl    $8, %esp
+        addl    tamCidade, %edi
+
+        #Bairro
+        pushl   %edi
+        pushl   $mostraBairro
+        call    printf
+        addl    $8, %esp
+        addl    tamBairro, %edi
+        
+        #Numero Quartos
+        pushl   (%edi)
+        pushl   $mostraNQuartos
+        call    printf
+        addl    $8, %esp
+        addl    tamQuartos, %edi
+
+        #Numero Suites
+        pushl   (%edi)
+        pushl   $mostraNSuites
+        call    printf
+        addl    $8, %esp
+        addl    tamQuartos, %edi
+        
+        #Garagem
+        pushl   %edi
+        pushl   $mostraGaragem
+        call    printf
+        addl    $8, %esp
+        addl    tamGaragem, %edi
+
+        #Metragem
+        pushl   %edi
+        pushl   $mostraMetragem
+        call    printf
+        addl    $8, %esp
+        addl    tamMetragem, %edi
+
+        #Aluguel
+        pushl   %edi
+        pushl   $mostraAluguel
+        call    printf
+        addl    $8, %esp
+        addl    tamAluguel, %edi
+
+        #Total Quartos + Suites
+        pushl   (%edi)
+        pushl   $mostraNTotal
+        call    printf
+        addl    $8, %esp
+        addl    tamQuartos, %edi
+
+        jmp     _maisUmReg
+
+
+    _fimConsulta:
+        pushl   $msgSemRegs
+        call    printf
+        addl    $4, %esp
+        RET
+    
 relatorio:
 
     movl    head, %edi
@@ -551,14 +688,12 @@ relatorio:
         call    printf
         addl    $8, %esp
         addl    tamCelular, %edi
-
         # TIPO IMÓVEL
         pushl   %edi
         pushl   $mostraTipoImovel
         call    printf
         addl    $8, %esp
         addl    tamTipoImovel, %edi
-
         # ENDEREÇO
         pushl   $mostraEndereco
         call    printf
@@ -576,18 +711,19 @@ relatorio:
         pushl   $mostraBairro
         call    printf
         addl    $8, %esp
+_bantes:
         addl    tamBairro, %edi
-
+_bdepois:
         # QUARTOS
         pushl   (%edi)
-        pushl   mostraNQuartos
+        pushl   $mostraNQuartos
         call    printf
         addl    $8, %esp
         addl    tamQuartos, %edi
 
         # SUITES
         pushl   (%edi)
-        pushl   mostraNSuites
+        pushl   $mostraNSuites
         call    printf
         addl    $8, %esp
         addl    tamQuartos, %edi
@@ -627,7 +763,7 @@ relatorio:
 
             addl    $1, iteracao
 
-            jmp _loopRelatorio
+            jmp     _loopRelatorio
 
     _fimRelatorio:
         RET
