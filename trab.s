@@ -1,11 +1,11 @@
 .section .data
-    msgAbertura:            .asciz  "Controle de cadastro de imóveis para locação\n"
-    menu:                   .asciz  "\nSelecione uma das opções: \n[1] Inserir um registro\n[2] Consultar um registro\n[3] Remover um registro\n[4] Mostrar relatório\n[5] Gravar registro novo\n[6] Recuperar registro\n[7] Sair\n"
+    msgAbertura:            .asciz  "\nControle de cadastro de imóveis para locação\n"
+    menu:                   .asciz  "\n\nSelecione uma das opções: \n[1] Inserir um registro\n[2] Consultar um registro\n[3] Remover um registro\n[4] Mostrar relatório\n[5] Gravar registro novo\n[6] Recuperar registro\n[7] Sair\n"
     opInvalida:             .asciz  "\nSelecione uma opção válida: \n"
 
 
     msgNome:                .asciz  "\nDigite o nome completo: " #32 bytes
-    msgCelular:             .asciz  "\nDigite o telefone celular [apenas números]: " #16bytes
+    msgCelular:             .asciz  "\nDigite o telefone celular: " #16bytes
     msgTipoImovel:          .asciz  "\nEscolha o tipo de imóvel [casa/apartamento]: " #16 bytes
     msgEndereco:            .asciz  "\nInforme o endereço: " #64 bytes
     msgCidade:              .asciz  "\nCidade: " #32 
@@ -19,19 +19,19 @@
     msgSemRegs:             .asciz  "\nNão há registros\n"
     msgPedeReg:             .asciz  "\nDigite um número de quartos para consulta: "
 
-    msgNumReg:              .asciz  "\nRegistro: %d"
+    msgNumReg:              .asciz  "\n\nRegistro: %d"
     mostraNome:             .asciz  "\nNome:    %s"
-    mostraCelular:          .asciz  "\nCelular: %d"
-    mostraTipoImovel:       .asciz  "\nTipo do Imóvel: %s"
-    mostraEndereco:         .asciz  "\nEndereco: "
+    mostraCelular:          .asciz  "Celular: %s"
+    mostraTipoImovel:       .asciz  "Tipo do Imóvel: %s"
+    mostraEndereco:         .asciz  "Endereco: "
     mostraCidade:           .asciz  "\nCidade:  %s"
-    mostraBairro:           .asciz  "\nBairro:  %s"
-    mostraNQuartos:         .asciz  "\nQuartos: %d"
+    mostraBairro:           .asciz  "Bairro:  %s"
+    mostraNQuartos:         .asciz  "Quartos: %d"
     mostraNSuites:          .asciz  "\nSuites:  %d"
-    mostraGaragem:          .asciz  "\nGaragem? %c"
-    mostraMetragem:         .asciz  "\nMetragem Total: %d"
+    mostraGaragem:          .asciz  "\nGaragem? %s"
+    mostraMetragem:         .asciz  "Metragem Total: %d"
     mostraAluguel:          .asciz  "\nValor do aluguel: %d"
-    mostraNTotal:           .asciz  "\nTotal de quartos e suítes: %d"
+    mostraNTotal:           .asciz  "\nTotal de quartos e suítes: %d\n"
 
 
     tamNome:                .int 32
@@ -45,11 +45,11 @@
     tamMetragem:            .int 4
     tamAluguel:             .int 4
 
-    tamReg:                 .int   216
-    # tamRegArq:              .int   216
+    tamReg:                 .int   156
+    # tamRegArq:              .int   156
 
-    bytesAteQuartos:         .int 208
-    bytesAteProximo:          .int 212
+    bytesAteQuartos:         .int 148
+    bytesAteProximo:          .int 152
 
     tipoNum: 			    .asciz 	"%d"
 	imprimeTipoNum: 	    .asciz 	"%d\n"
@@ -70,7 +70,7 @@
 	enderecoRemove:			.space 	4	# endereço do registro para remover
     tail:   			    .space 	4	# último endereço do registro
 
-    reg:                    .space 216
+    reg:                    .space 156
     descritor:			    .int 	0
 	totalQuartos:			.int 	0
 	posicaoAtual: 		    .int	0	
@@ -189,7 +189,7 @@ menuOpcoes:
 
 insereEOrdena:
     movl    inicioReg, %ecx             # endereço do primeiro registro
-    addl    bytesAteQuartos , %ecx       
+    addl    bytesAteQuartos, %ecx       
     
     movl    $0, %ebx
     movl    head, %edi
@@ -211,7 +211,6 @@ insereEOrdena:
 
     movl    pai, %edi
     addl    bytesAteProximo, %edi
-
     movl    (%edi), %eax
     movl    %eax, filho
 
@@ -244,17 +243,17 @@ insereEOrdena:
     # RET
 
     _inserePrimeiroElemento:
+_b1:
         movl    inicioReg, %ecx
         movl    %ecx, head
         movl    %ecx, tail
-
+        addl    bytesAteProximo, %ecx
         movl    $0, (%ecx)
-        
-        addl    $1, tamList
 
         RET
 
     _insereHead:
+_b2:
         movl    inicioReg, %ecx
         addl    bytesAteProximo, %ecx
 
@@ -264,11 +263,10 @@ insereEOrdena:
         movl    inicioReg, %ecx
         movl    %ecx, head
 
-        addl    $1, tamList
-
         RET
 
     _insereTail:
+_b3:
         movl    pai, %edi
         movl    inicioReg, %ebx
 
@@ -282,6 +280,7 @@ insereEOrdena:
         RET
 
     _insereAntesFilho:
+_b4:
         movl    pai, %edi
         movl    filho, %ebx
         movl    inicioReg, %ecx
@@ -290,12 +289,10 @@ insereEOrdena:
         movl    %ecx, (%edi)
 
         addl    bytesAteProximo, %ecx
-
         movl    %ebx, (%ecx)
 
-        addl $1, tamList
-
         RET
+
 
 leReg:
     pushl	tamReg
@@ -327,21 +324,16 @@ leReg:
     call	printf
     addl	$4, %esp
 
-    pushl	$tipoNum
-    call	scanf
-
-    addl	$4, %esp
     popl	%edi
-    movl	(%edi),%eax
-    movl	%eax, tamCelular
 
-    addl	tamCelular, %edi
-    
     pushl	stdin
-    pushl	$20
-    pushl	$limpaScan
+    pushl	tamCelular
+    pushl	%edi
     call	fgets
-    addl	$12, %esp
+
+    popl    %edi
+    addl	$8, %esp
+    addl    tamCelular, %edi
 
     # TIPO DE IMÓVEL (CASA OU APARTAMENTO)
 
@@ -542,7 +534,7 @@ consulta:
 
     movl    head, %edi
     cmpl    $0, %edi
-    je      _fimConsulta
+    je      _fimConsultaSemReg
 
     movl    %edi, regAtual
     
@@ -569,82 +561,82 @@ consulta:
     _mostraReg:
         movl    regAtual, %edi
 
-        #Nome
+        # NOME
         pushl   %edi
         pushl   $mostraNome
         call    printf
         addl    $8, %esp
         addl    tamNome, %edi
 
-        #Celular
-        pushl   (%edi)
+        # CELULAR
+        pushl   %edi
         pushl   $mostraCelular
         call    printf
         addl    $8, %esp
         addl    tamCelular, %edi
 
-        #Tipo Imovel
+        # TIPO IMÓVEL
         pushl   %edi
         pushl   $mostraTipoImovel
         call    printf
         addl    $8, %esp
         addl    tamTipoImovel, %edi
 
-        #Endereço
+        # ENDEREÇO
         pushl   $mostraEndereco
         call    printf
         addl    $4, %esp
 
-        #Cidade
+        # CIDADE
         pushl   %edi
         pushl   $mostraCidade
         call    printf
         addl    $8, %esp
         addl    tamCidade, %edi
 
-        #Bairro
+        # BAIRRO
         pushl   %edi
         pushl   $mostraBairro
         call    printf
         addl    $8, %esp
         addl    tamBairro, %edi
         
-        #Numero Quartos
+        # NÚMERO DE QUARTOS
         pushl   (%edi)
         pushl   $mostraNQuartos
         call    printf
         addl    $8, %esp
         addl    tamQuartos, %edi
 
-        #Numero Suites
+        # NÚMERO DE SUÍTES
         pushl   (%edi)
         pushl   $mostraNSuites
         call    printf
         addl    $8, %esp
         addl    tamQuartos, %edi
         
-        #Garagem
+        # GARAGEM
         pushl   %edi
         pushl   $mostraGaragem
         call    printf
         addl    $8, %esp
         addl    tamGaragem, %edi
 
-        #Metragem
-        pushl   %edi
+        # METRAGEM
+        pushl   (%edi)
         pushl   $mostraMetragem
         call    printf
         addl    $8, %esp
         addl    tamMetragem, %edi
 
-        #Aluguel
-        pushl   %edi
+        # ALUGUEL
+        pushl   (%edi)
         pushl   $mostraAluguel
         call    printf
         addl    $8, %esp
         addl    tamAluguel, %edi
 
-        #Total Quartos + Suites
+        # TOTAL QUARTOS + SUÍTES
         pushl   (%edi)
         pushl   $mostraNTotal
         call    printf
@@ -654,10 +646,12 @@ consulta:
         jmp     _maisUmReg
 
 
-    _fimConsulta:
+    _fimConsultaSemReg:
         pushl   $msgSemRegs
         call    printf
         addl    $4, %esp
+
+    _fimConsulta:
         RET
     
 relatorio:
@@ -683,17 +677,19 @@ relatorio:
         addl    tamNome, %edi
 
         # CELULAR
-        pushl   (%edi)
+        pushl   %edi
         pushl   $mostraCelular
         call    printf
         addl    $8, %esp
         addl    tamCelular, %edi
+
         # TIPO IMÓVEL
         pushl   %edi
         pushl   $mostraTipoImovel
         call    printf
         addl    $8, %esp
         addl    tamTipoImovel, %edi
+
         # ENDEREÇO
         pushl   $mostraEndereco
         call    printf
@@ -711,9 +707,8 @@ relatorio:
         pushl   $mostraBairro
         call    printf
         addl    $8, %esp
-_bantes:
         addl    tamBairro, %edi
-_bdepois:
+
         # QUARTOS
         pushl   (%edi)
         pushl   $mostraNQuartos
@@ -763,15 +758,16 @@ _bdepois:
 
             addl    $1, iteracao
 
+            movl    (%edi), %edi
+
             jmp     _loopRelatorio
 
-    _fimRelatorio:
-        RET
 
     _semRegistros:
         pushl   $msgSemRegs
         call    printf
         addl    $4, %esp
 
+    _fimRelatorio:
         RET
         
