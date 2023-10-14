@@ -40,10 +40,11 @@
     tamCidade:              .int 32
     tamBairro:              .int 32
     tamQuartos:             .int 4
-    # De novo 4 bytes aqui
+    # tamSuite              4 bytes 
     tamGaragem:             .int 4
     tamMetragem:            .int 4
     tamAluguel:             .int 4
+    # tamTotalQuartos       4 bytes 
 
     tamReg:                 .int   156
     # tamRegArq:              .int   156
@@ -171,16 +172,22 @@ menuOpcoes:
         call    limpaScanf
         call    leReg
         jmp     menuOpcoes
+
     _consultaReg:   
         call    limpaScanf
         call    consulta
         jmp     menuOpcoes
+
     _removeReg:
-        RET
+        call    limpaScanf
+        call    remove
+        jmp     menuOpcoes
+
     _mostraRelatorio:
         call    limpaScanf
         call    relatorio
         jmp     menuOpcoes
+
     _salvaReg:
         RET
     _recuperaReg:
@@ -188,7 +195,7 @@ menuOpcoes:
 
 
 insereEOrdena:
-    movl    inicioReg, %ecx             # endereço do primeiro registro
+    movl    inicioReg, %ecx            
     addl    bytesAteQuartos, %ecx       
     
     movl    $0, %ebx
@@ -243,7 +250,7 @@ insereEOrdena:
     # RET
 
     _inserePrimeiroElemento:
-_b1:
+
         movl    inicioReg, %ecx
         movl    %ecx, head
         movl    %ecx, tail
@@ -253,7 +260,7 @@ _b1:
         RET
 
     _insereHead:
-_b2:
+
         movl    inicioReg, %ecx
         addl    bytesAteProximo, %ecx
 
@@ -266,7 +273,7 @@ _b2:
         RET
 
     _insereTail:
-_b3:
+
         movl    pai, %edi
         movl    inicioReg, %ebx
 
@@ -280,7 +287,7 @@ _b3:
         RET
 
     _insereAntesFilho:
-_b4:
+
         movl    pai, %edi
         movl    filho, %ebx
         movl    inicioReg, %ecx
@@ -654,6 +661,7 @@ consulta:
     _fimConsulta:
         RET
     
+
 relatorio:
 
     movl    head, %edi
