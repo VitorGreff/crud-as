@@ -8,7 +8,7 @@
     opInvalida:             .asciz  "\nSelecione uma opção válida: \n"
 
     msgNome:                .asciz  "\nDigite o nome completo: " #32 bytes
-    msgCelular:             .asciz  "\nDigite o telefone celular: " #16bytes
+    msgCelular:             .asciz  "\nDigite o telefone celular: " #16 bytes
     msgTipoImovel:          .asciz  "\nEscolha o tipo de imóvel [casa/apartamento]: " #16 bytes
     msgEndereco:            .asciz  "\nInforme o endereço: " #64 bytes
     msgCidade:              .asciz  "\n Cidade: " #32 
@@ -45,30 +45,31 @@
     #######################################################################
     # VARIÁVEIS
 
-    tamNome:                .int 32
-    tamCelular:             .int 16
-    tamTipoImovel:          .int 16
-    tamCidade:              .int 32
-    tamBairro:              .int 32
-    tamQuartos:             .int 4
-    # tamSuite              4 bytes 
-    tamGaragem:             .int 4
-    tamMetragem:            .int 4
-    tamAluguel:             .int 4
-    # tamTotalQuartos       4 bytes 
+    tamNome:                .int    32
+    tamCelular:             .int    16
+    tamTipoImovel:          .int    16
+    tamCidade:              .int    32
+    tamBairro:              .int    32
+    tamQuartos:             .int    4
+    # tamSuite                      4 bytes 
+    tamGaragem:             .int    4
+    tamMetragem:            .int    4
+    tamAluguel:             .int    4
+    # tamTotalQuartos               4 bytes 
 
-    tamReg:                 .int   156
+    tamReg:                 .int    156
+    reg:                    .space  156
 
-    bytesAteQuartos:        .int 148
-    bytesAtePonteiro:       .int 152
+    bytesAteQuartos:        .int    148         # num de bytes até chegarmos no campo número de quaetos
+    bytesAtePonteiro:       .int    152         # num de bytes até chegarmos no campo do ponteiro
 
     tipoNum: 			    .asciz 	"%d"
 	Char:			        .asciz	"%c"
 	Str:			        .asciz	"%s"
 
-    op:                     .int   0
-    removeReg:              .int   0
-    limpaScan:              .space 10
+    op:                     .int    0
+    removeReg:              .int    0
+    limpaScan:              .space  10
 
 	head:			        .space  4	
     tail:   			    .space 	4
@@ -79,7 +80,6 @@
 	regAtual:       	    .space  4 
 	enderecoRegRemocao:		.space 	4	
 
-    reg:                    .space 156
 	totalQuartos:			.int 	0
 
 	indice:			        .int	0
@@ -175,104 +175,112 @@ menuOpcoes:
 
 
 insereEOrdena:
-    movl    inicioReg, %ecx            
-    addl    bytesAteQuartos, %ecx       
+    movl    inicioReg, %ecx             # inicioReg é o endereço inicial do reg a ser inserido
+    addl    bytesAteQuartos, %ecx       # leva até o endereço que contém o número de quartos no registro 
     
-    movl    $0, %ebx
-    movl    head, %edi
-    cmpl    %edi, %ebx
-    je      _inserePrimeiroElemento
+    cmpl    $0, head                    # verifica se a lista está vazia
+    je      _inserePrimeiroElemento     # se sim, insere na head
 
     movl    head, %edi
     movl    %edi, pai
 
-    addl    bytesAteQuartos, %edi
+    addl    bytesAteQuartos, %edi       # leva até o endereço que contém o número de quartos no registro
     movl    (%edi), %eax
-    cmpl    %eax, (%ecx)
-    jle     _insereHead
+    cmpl    %eax, (%ecx)                # verifica se o total de quartos do reg a ser inserido é
+                                        # menor que o do primeiro reg
+    jle     _insereHead                 # se for, insere na red
+
+    movl    pai, %edi                   
+    addl    bytesAtePonteiro, %edi      # leva até o endereço do ponteiro
+    cmpl    $0, (%edi)                  # verifica se o ponteiro é 0, ou seja, único da lista
+    je      _insereTail                 # se sim, insere no tail
 
     movl    pai, %edi
-    addl    bytesAtePonteiro, %edi
-    cmpl    $0, (%edi)
-    je      _insereTail
-
-    movl    pai, %edi
-    addl    bytesAtePonteiro, %edi
+    addl    bytesAtePonteiro, %edi      
     movl    (%edi), %eax
-    movl    %eax, filho
+    movl    %eax, filho                 # coloca o endereço do próximo registro no filho
 
     movl    inicioReg, %ecx
-    addl    bytesAteQuartos, %ecx
+    addl    bytesAteQuartos, %ecx       # se chegou até aqui, não entrou nos caso base da inserção
 
     _loopInsercao:
-        movl    pai, %edi
-        movl    filho, %ebx
+        # no loop de inserção, temos duas possibilidades: 
+        # * inserir antes do filho (entre registro atual e próximo)
+        # * inserir no fim da lista
 
-        addl    bytesAtePonteiro, %edi
+        movl    filho, %ebx
 
         addl    bytesAteQuartos, %ebx
         movl    (%ecx), %eax
         cmpl    (%ebx), %eax
-        jle     _insereAntesFilho
+        jle     _insereAntesFilho           # verifica se será inserido entre reg atual e próximo
+                                            # ou seja, se tem - quartos que o proximo reg
 
         movl    filho, %ebx
-        movl    %ebx, pai
+        movl    %ebx, pai                   # vai para o próximo registro
 
         movl    pai, %edi
         addl    bytesAtePonteiro, %edi
         cmpl    $0, (%edi)
-        je      _insereTail
+        je      _insereTail                 # verifica se é o último reg
 
         movl    (%edi), %eax
-        movl    %eax, filho
+        movl    %eax, filho                 # vai para o próximo registro
         jmp     _loopInsercao
 
     _inserePrimeiroElemento:
+        # primeiro registro a ser inserido na lista vazia
 
-        movl    inicioReg, %ecx
+        movl    inicioReg, %ecx             
         movl    %ecx, head
-        movl    %ecx, tail
-        addl    bytesAtePonteiro, %ecx
-        movl    $0, (%ecx)
-
+        movl    %ecx, tail                  # coloca o endereço do registro tanto em head quanto em tail
+        addl    bytesAtePonteiro, %ecx      
+        movl    $0, (%ecx)                  # seta o ponteiro no final do registro como 0
+                                            # indica que o ponteiro é vazio
         RET
 
     _insereHead:
+        # insere na head, a primeira posição
 
         movl    inicioReg, %ecx
         addl    bytesAtePonteiro, %ecx
 
         movl    head, %edi
-        movl    %edi, (%ecx)
+        movl    %edi, (%ecx)                # coloca a head antiga no ponteiro do novo primerio registro
 
-        movl    inicioReg, %ecx
-        movl    %ecx, head
+        movl    inicioReg, %ecx 
+        movl    %ecx, head                  # seta no novo primeiro reg como a head
 
         RET
 
     _insereTail:
-        movl    pai, %edi
+        # insere na tail, o final da lista
+
+        movl    pai, %edi                   # pai aqui é o último elemento
         movl    inicioReg, %ebx
 
-        addl    bytesAtePonteiro, %edi
+        addl    bytesAtePonteiro, %edi      
         movl    %ebx, (%edi)
-        movl    %ebx, tail
+        movl    %ebx, tail                  # move o endereço do novo reg tanto para o ponteiro do último
+                                            # quanto para a tail
 
-        addl    bytesAtePonteiro, %ebx
+        addl    bytesAtePonteiro, %ebx      # zera o ponetiro do novo último registro
         movl    $0, (%ebx)
 
         RET
 
     _insereAntesFilho:
+        # insere entre o registro que está olhando e o próximo
+
         movl    pai, %edi
         movl    filho, %ebx
         movl    inicioReg, %ecx
         
         addl    bytesAtePonteiro, %edi
-        movl    %ecx, (%edi)
+        movl    %ecx, (%edi)                # coloca o endereço do novo reg no ponteiro de pai
 
         addl    bytesAtePonteiro, %ecx
-        movl    %ebx, (%ecx)
+        movl    %ebx, (%ecx)                # coloca o endereço do filho no ponteiro do novo reg
 
         RET
 
@@ -282,7 +290,11 @@ inserir:
     call	malloc
     movl	%eax, inicioReg
     movl	inicioReg, %edi
-    addl	$4, %esp 
+    addl	$4, %esp            # aloca memória para o registro e guarda o endereço em inicioReg
+
+    # pede todos os campos do registro
+    # quando será lida string, pedimos com fgets para poder ser digitado espaço
+    # para inteiros, lemos com scanf mesmo
 
 	# NOME
 
@@ -290,7 +302,7 @@ inserir:
     call	printf
     addl	$4, %esp 
 
-    pushl	stdin
+    pushl	stdin       
     pushl	tamNome
     pushl	%edi
     call	fgets
