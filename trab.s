@@ -1,3 +1,9 @@
+# Trabalho 2 - PIHS
+# Controle de cadastro de imóveis para locação
+# Desenvolvido por:
+#   Rômulo Barreto Mincache     RA 117477
+#   Vitor Augusto Greff         RA 118926
+
 .section .data
 
     #######################################################################
@@ -42,6 +48,10 @@
     msgPedeNQuartos:        .asciz  "\nDigite um número de quartos para consulta: "
     msgPedeIndiceReg:       .asciz  "\nDigite o número do registro que deseja remover: " 
 
+    tipoNum: 			    .asciz 	"%d"
+	Char:			        .asciz	"%c"
+	Str:			        .asciz	"%s"
+
     #######################################################################
     # VARIÁVEIS
 
@@ -56,16 +66,13 @@
     tamMetragem:            .int    4
     tamAluguel:             .int    4
     # tamTotalQuartos               4 bytes 
+    # tamPonteiro                   4 bytes    
 
     tamReg:                 .int    156
     reg:                    .space  156
 
-    bytesAteQuartos:        .int    148         # num de bytes até chegarmos no campo número de quaetos
+    bytesAteQuartos:        .int    148         # num de bytes até chegarmos no campo número de quartos
     bytesAtePonteiro:       .int    152         # num de bytes até chegarmos no campo do ponteiro
-
-    tipoNum: 			    .asciz 	"%d"
-	Char:			        .asciz	"%c"
-	Str:			        .asciz	"%s"
 
     op:                     .int    0
     removeReg:              .int    0
