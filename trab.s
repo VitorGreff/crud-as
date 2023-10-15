@@ -89,7 +89,7 @@
 	nomeArq:			    .asciz	"registrosImobiliaria.txt"
 
 .section .bss
-    .lcomm  arquivoHandle, 4
+    .lcomm  identificadorArquivo, 4
 
 .section    .text
 .globl      _start
@@ -297,22 +297,22 @@ inserir:
     # para inteiros, lemos com scanf mesmo
 
 	# NOME
-
     pushl	$msgNome
     call	printf
     addl	$4, %esp 
 
-    pushl	stdin       
-    pushl	tamNome
-    pushl	%edi
+    pushl	stdin               # qual o dispositivo de entrada
+    pushl	tamNome             # tamanho do que será lido
+    pushl	%edi                # endereço onde será armazenado
     call	fgets
 
     popl	%edi
     addl	$8, %esp 
-    addl	tamNome, %edi 
+    addl	tamNome, %edi       # somamos sempre o tamanho do campo que foi lido em edi
+
+    # até o fim da função, segue essa mesma estrutura para as próximas leituras
 
     # CELULAR
-
     pushl	%edi
     
     pushl	$msgCelular
@@ -331,7 +331,6 @@ inserir:
     addl    tamCelular, %edi
 
     # TIPO DE IMÓVEL (CASA OU APARTAMENTO)
-
     pushl   %edi
 
     pushl	$msgTipoImovel
@@ -374,7 +373,6 @@ inserir:
     addl	tamCidade, %edi
 
     # BAIRRO
-
     pushl	%edi
     pushl	$msgBairro
     call	printf
@@ -391,7 +389,6 @@ inserir:
     addl	tamBairro, %edi
 
     # NÚMERO DE QUARTOS
-
     pushl	%edi
     
     pushl	$msgNQuartos
@@ -406,12 +403,6 @@ inserir:
     movl	(%edi),%eax
     movl	%eax, totalQuartos
     addl	tamQuartos, %edi
-
-    pushl	stdin
-    pushl	$20
-    pushl	$limpaScan
-    call	fgets
-    addl	$12, %esp
 
     # SUITES
     pushl	%edi
@@ -430,14 +421,9 @@ inserir:
     addl	%eax, totalQuartos
     addl	tamQuartos, %edi 
 
-    pushl	stdin
-    pushl	$20
-    pushl	$limpaScan
-    call	fgets
-    addl	$12, %esp 
+    call    limpaBuffer             # como a próxima leitura será com fgets, precisamos limpar o buffer
 
     # GARAGEM
-
     pushl	%edi
 
     pushl	$msgGaragem
@@ -455,7 +441,6 @@ inserir:
     addl	tamGaragem, %edi 
 
     # METRAGEM
-
     pushl	%edi
 
     pushl	$msgMetragem
@@ -469,13 +454,7 @@ inserir:
     popl	%edi
     addl	tamMetragem, %edi 
 
-    pushl	$limpaScan
-    pushl   $Char
-    call 	scanf
-    addl    $8, %esp 
-
     # ALUGUEL
-
     pushl   %edi
 
     pushl   $msgAluguel
@@ -489,27 +468,22 @@ inserir:
 	popl 	%edi
     addl    tamAluguel, %edi
 
-    pushl	$limpaScan
-    pushl   $Char
-    call 	scanf
-    addl    $8, %esp 
-
-    # Colocamos número de comodos no final
+    # Colocamos número total de quartos no final do registro
     movl    totalQuartos, %eax
     movl    %eax, (%edi)
     addl    $4, %edi
 
-	# FIM DO REGISTRO, COLOCA 0 NO FINAL
+	# FIM DO REGISTRO
     movl 	$0, %eax
-    movl   	%eax, (%edi)
+    movl   	%eax, (%edi)            # colocamos 0 no campo do ponteiro
 
     movl    inicioReg, %edi
-    call    insereEOrdena
+    call    insereEOrdena           # chamamos a função para inserir o novo reg na lista
     RET
 
 
 limpaBuffer:
-	# LIMPA BUFFER DE LEITURA 
+	# limpa o buffer de leitura
 
 	pushl	$limpaScan
 	pushl   $Char
@@ -518,6 +492,8 @@ limpaBuffer:
 	RET
 
 printReg:
+    # percorre pelo edi, printando cada campo do registro
+
     # NOME
     pushl   %edi
     pushl   $mostraNome
@@ -605,152 +581,167 @@ printReg:
 consulta:
     pushl   $msgPedeNQuartos
     call    printf
-    addl    $4, %esp
+    addl    $4, %esp            
 
     pushl   $nQuartosConsulta
     pushl   $tipoNum
     call    scanf
-    addl   $8, %esp
+    addl   $8, %esp                 # pede número de quartos a ser consultado
 
     movl    head, %edi
     cmpl    $0, %edi
-    je      _fimConsultaSemReg
+    je      _fimConsultaListaVazia  # verifica se a head é 0, ou seja, lista vazia
 
-    movl    %edi, regAtual
+    movl    $0, indice              # indice indicará o número do registro no print, estético
+
+    movl    %edi, regAtual          # regAtual guarda o registro para o qual estamos olhando
     
     _loopConsulta:
-        movl    regAtual, %edi
-        movl    $0, %eax
+        movl    regAtual, %edi          
         addl    bytesAteQuartos, %edi
         movl    (%edi), %eax
-        movl    %eax, totalQuartos
-
-        cmpl    nQuartosConsulta, %eax
-        je      _mostraReg
+        cmpl    nQuartosConsulta, %eax      # verifica se num quartos do regAtual é o mesmo número  
+                                            # que estamos buscando
+        je      _mostraReg                  # se for, mostra o registro
 
     _maisUmReg:
-        movl    regAtual, %edi
+        movl    regAtual, %edi              
         addl    bytesAtePonteiro, %edi
-        cmpl    $0, (%edi)
-        je      _fimConsulta
+        cmpl    $0, (%edi)                  # verifica se regAtual é o último registro da lista
+        je      _fimConsulta                # se for, encerra a consulta
 
         movl    (%edi), %ecx
         movl    %ecx, regAtual
-        jmp     _loopConsulta
+        jmp     _loopConsulta               # passa o endereço no ponteiro para regAtual,
+                                            # preparando a busca no próximo registro
 
     _mostraReg:
+        pushl   indice
+        pushl   $msgNumReg
+        call    printf
+        addl    $8, %esp                    # printa o número do registro encontrado, estético
+
+        incl    indice
+
         movl    regAtual, %edi
+        call    printReg                    # coloca regAtual em edi para ser printado
 
-        call    printReg
-
-        jmp     _maisUmReg
+        jmp     _maisUmReg                  # volta a buscar por outros registros com o mesmo num de quartos
 
 
-    _fimConsultaSemReg:
+    _fimConsultaListaVazia:
         pushl   $msgSemRegs
         call    printf
-        addl    $4, %esp
+        addl    $4, %esp                    # mensagem de lista vazia
 
     _fimConsulta:
         RET
 
 remove:
-    call    relatorio
+    # a remoção será feita através do índice do registro na lista
 
-    cmpl    $0, head
-    je      _listaVazia
+    call    relatorio               # printa todos os registros, para o usuário ver qual o índice do reg
+
+    cmpl    $0, head                # verifica se a lista está vazia
+    je      _listaVazia 
 
     pushl   $msgPedeIndiceReg
     call    printf
     addl    $4, %esp
-
     pushl   $numRegRemocao
     pushl   $tipoNum
     call    scanf
-    addl    $8, %esp
+    addl    $8, %esp                # pede o índice do registro a ser removido
 
-    cmpl    $0, numRegRemocao
-    je      _removeHead
+    cmpl    $0, numRegRemocao       # se for 0, remove a head
+    je      _removeHead             
 
     movl    $0, indice
     movl    head, %edi
-    movl    %edi, pai
+    movl    %edi, pai               
 
     addl    bytesAtePonteiro, %edi 
     movl    (%edi), %ebx
-    movl    %ebx, filho
+    movl    %ebx, filho             # setando indice, head, pai e filho
 
     decl    numRegRemocao
 
     _loopRemocao:
+        # será removido o registro filho do que estamos olhando
+
         cmpl    $0, filho 
-        je      _falhaRemocao
+        je      _falhaRemocao       # se o fiho for 0, indica que chegamos ao fim da lista e
+                                    # o índice escolhido não foi encontrado
 
-        movl    indice, %eax
-        cmpl    %eax, numRegRemocao
-        je      _removeProximo
+        movl    indice, %eax        
+        cmpl    %eax, numRegRemocao     # verifica se o indice escolhido é o índice atual
+        je      _removeFilho              # se for, iremos remover o registro filho
 
-        incl    %eax
-        movl    %eax, indice
+        incl    indice                  
 
-        movl    pai, %edi
         movl    filho, %ebx
         movl    %ebx, pai
         addl    bytesAtePonteiro, %ebx
         movl    (%ebx), %ecx
-        movl    %ecx, filho
+        movl    %ecx, filho             # colocamos o filho em novo pai, e seu filho em filho
+                                        # preparando para continuar a busca
 
         jmp     _loopRemocao
 
     _removeHead:
-        movl    head, %edi
+        # removeremos o primeiro elemento da lista, ínidice escolhido foi 0
+
+        movl    head, %edi                  
         movl    %edi, enderecoRegRemocao
         addl    bytesAtePonteiro, %edi
         movl    (%edi), %eax
-        movl    %eax, head
+        movl    %eax, head                  # colocamos o filho de head como novo head
 
         pushl   enderecoRegRemocao
         call    free
-        addl    $4, %esp
+        addl    $4, %esp                    # liberamos o espaço alocado para o arquivo que foi removido
 
         pushl   $msgRegRemovido
         call    printf
-        addl    $4, %esp
+        addl    $4, %esp                    # mensagem de remoção com sucesso
 
-        RET
+        jmp     _fimRemove
 
-    _removeProximo:
-        movl    filho, %edi
+    _removeFilho:
+        # o registro a ser removido é o filho do registro que estamos olhando
+
+        movl    filho, %edi             
         movl    %edi, enderecoRegRemocao
         addl    bytesAtePonteiro, %edi
         movl    (%edi), %eax
-        movl    %eax, filho
+        movl    %eax, filho                 # colocamos o filho do filho como novo filho
 
         movl    pai, %ecx
         addl    bytesAtePonteiro, %ecx
         movl    filho, %edi
-        movl    %edi, (%ecx)
+        movl    %edi, (%ecx)                # encadeamos o novo filho no pai
 
         pushl   enderecoRegRemocao
         call    free
-        addl    $4, %esp
+        addl    $4, %esp                    # liberamos o espaço alocado
 
         cmpl    $0, %eax
-        jne      _fimRemove
+        jne      _fimRemove                 # o que tem no eax é o filho do filho
+                                            # se ele era 0, indica que o removido era o último
 
         movl    pai, %edi
-        movl    %edi, tail
+        movl    %edi, tail                  # se o removido era o último, atualizamos a tail
 
-        pushl   $msgRegRemovido
+        pushl   $msgRegRemovido             
         call    printf
-        addl    $4, %esp
+        addl    $4, %esp                    # mensagem de registro removido com sucesso
 
         jmp     _fimRemove
 
     _falhaRemocao:
         pushl   $msgRegNaoEncontrado
-        call    printf
-        addl    $4, %esp
+        call    printf      
+        addl    $4, %esp                    # mensagem de registro não encontrado
 
         jmp     _fimRemove
 
@@ -760,29 +751,29 @@ remove:
 
 relatorio:
 
-    movl    head, %edi
-    movl    $0, indice
+    movl    $0, indice              # coloca o índice dos registros como 0, estético
 
-    movl    $0, %ebx
-    cmpl    %edi, %ebx
-    je      _semRegistros
+    movl    head, %edi              # head em edi para percorrer a lista
+    cmpl    $0, %edi                # verifica se há registros na lista
+    je      _semRegistros           # se não há, salta para a finalização do relatório
 
     _loopRelatorio:
         pushl   indice
         pushl   $msgNumReg
         call    printf
-        addl    $8, %esp
+        addl    $8, %esp            # printa o número do registro
 
-        call    printReg
+        call    printReg            # printa o registro em si
 
         _proximoRegRelatorio:
             movl    (%edi), %eax
-            cmpl    $0, %eax
-            je      _fimRelatorio
+            cmpl    $0, %eax        # verifica se há mais registros (ponteiro diferente de 0)
+            je      _fimRelatorio   # se é o ponteiro é 0, é o último. salta para finalizar relatório
 
-            addl    $1, indice
+            incl    indice          # incrementa índice
 
-            movl    (%edi), %edi
+            movl    (%edi), %edi    # passa o endereço no ponteiro para edi,
+                                    # preparando para printar o próximo registro
 
             jmp     _loopRelatorio
 
@@ -790,24 +781,24 @@ relatorio:
     _semRegistros:
         pushl   $msgSemRegs
         call    printf
-        addl    $4, %esp
+        addl    $4, %esp            # printa mensagem de lista vazia
 
     _fimRelatorio:
         RET
 abrirArquivoLeitura:
-    movl    $5, %eax
+    movl    $5, %eax                # chamada de sistema para abrir arquivo
     movl    $nomeArq, %ebx         
     movl    $02100, %ecx            # somente leitura
-    movl    $0777, %edx            # todos os acessos para todos
+    movl    $0777, %edx             # todos os acessos para todos
     int     $0x80
     test    %eax, %eax              # verifica se o arquivo é válido
     js      badfile
-    movl    %eax, arquivoHandle    # identificador do arquivo1 em
+    movl    %eax, identificadorArquivo     # setando identificador do arquivo 
     
     RET
 
 abrirArquivoEscrita:
-    movl    $5, %eax
+    movl    $5, %eax                # chamada de sistema para abrir arquivo
     movl    $nomeArq, %ebx         
     movl    $01101, %ecx            # somente escrita, cria arquivo se não existe
                                     # e escreve no final do arquivo
@@ -815,113 +806,117 @@ abrirArquivoEscrita:
     int     $0x80
     test    %eax, %eax              # verifica se o arquivo é válido
     js      badfile
-    movl    %eax, arquivoHandle    # identificador do arquivo1 em
+    movl    %eax, identificadorArquivo    # setando identificador do arquivo
 	
     RET
 
 fecharArquivo:
-    movl    $6, %eax
-    movl    arquivoHandle, %ebx
+    movl    $6, %eax                    # chamada de sistema para fechar o arquivo
+    movl    identificadorArquivo, %ebx
     int     $0x80
 
     RET
 
 gravar:
-    call    abrirArquivoEscrita
+    call    abrirArquivoEscrita                 # abrimos o arquivo
     
     movl    head, %edi
-    movl    %edi, regAtual
+    movl    %edi, regAtual                      # colocamos head no regAtual, é o endereço inicial
+                                                # do registro a ser gravado
 
     _loopGravacao:
-        cmpl    $0, regAtual
+        cmpl    $0, regAtual                    # se regAtual for 0, fim da lista
         je      _fimGravacao
 
-        movl    $4, %eax
-        movl    arquivoHandle, %ebx
-        movl    regAtual, %ecx
+        movl    $4, %eax                        # chamada de sistema para escrita no arquivo
+        movl    identificadorArquivo, %ebx
+        movl    regAtual, %ecx                  # será gravado o regAtual
         movl    tamReg, %edx
         int     $0x80
 
-        movl    regAtual, %edi
+        movl    regAtual, %edi                  
         addl    bytesAtePonteiro, %edi
         movl    (%edi), %edi
-        movl    %edi, regAtual
+        movl    %edi, regAtual                  # vamos até o próximo registro
         
         jmp     _loopGravacao
 
     _fimGravacao:
-        call    fecharArquivo
+        call    fecharArquivo                   # fecha o arquivo
 
         pushl   $msgGravacaoArquivo
         call    printf
-        addl    $4, %esp
+        addl    $4, %esp                        # mensagem de gravação com sucesso
 
-        RET
+        RET     
 
 recuperar:
-    call    abrirArquivoLeitura
-    movl    $0, indice
+    call    abrirArquivoLeitura                 # abrimos o arquivo para leitura
+    movl    $0, indice                          # indíce aqui só diz se já recuperamos um reg ou não
 
     _loopRecuperacao:
-        pushl   tamReg
+        pushl   tamReg                          
         call    malloc
         movl    %eax, inicioReg
-        addl    $4, %esp
+        addl    $4, %esp                        # alocamos memória para o registro, endereço em inicioReg
 
-        movl    $3, %eax
-        movl    arquivoHandle, %ebx
-        movl    inicioReg, %ecx
+        movl    $3, %eax                        # chamada de sistema para leitura do arquivo
+        movl    identificadorArquivo, %ebx
+        movl    inicioReg, %ecx                 # endereço do reg recuperado será inicioReg
         movl    tamReg, %edx
         int     $0x80
 
-        cmpl    $0, %eax
-        je      _fimRecuperacao
+        cmpl    $0, %eax                        # se eax for 0, acabaram os registros do arquivo
+        je      _fimRecuperacao                 # salta para fim da recuperação
 
         movl    inicioReg, %edi
         addl    bytesAtePonteiro, %edi
-        movl    $0, (%edi)
+        movl    $0, (%edi)                      # colocamos 0 no campo de ponteiro do registro recuperado
 
-        cmpl    $0, indice
-        je      _defineHead
+        cmpl    $0, indice                      # se é o primeiro registro recuperado
+        je      _defineHead                     # salta para definir ele como head
 
-        call insereEOrdena
+        call insereEOrdena                      # insere o arquivo na lista encadeada
 
-        jmp _loopRecuperacao
+        jmp _loopRecuperacao                    # loop para recuperar outros registros
 
     _defineHead:
         movl    inicioReg, %edi
         movl    %edi, head
-        movl    %edi, tail
+        movl    %edi, tail                      # definimos registro recuperado como head e tail
 
         addl    bytesAtePonteiro, %edi
-        movl    $0, (%edi)
+        movl    $0, (%edi)                      # colocamos 0 no campo ponteiro do registro
 
-        incl    indice
+        incl    indice                          # incrementamos indice, mostrando que já recuperamos
+                                                # um registro do arquivo
 
-        jmp     _loopRecuperacao
+        jmp     _loopRecuperacao                # volta para recuperar mais
 
-    _fimRecuperacao:
-        call    fecharArquivo
+    _fimRecuperacao:                
+        call    fecharArquivo                   # fecha o arquivo
 
-        cmpl    $0, indice
-        je      _arquivoVazio
+        cmpl    $0, indice                      # se indice for 0, não recuperamos nenhum registro
+        je      _arquivoVazio                   # arquivo vazio
 
-        pushl   $msgRecuperacao
+        pushl   $msgRecuperacao                 
         call    printf
-        addl    $4, %esp
+        addl    $4, %esp                        # mensagem de registros recuperados com sucesso
 
         RET
 
     _arquivoVazio:
-        movl    $0, head
+        movl    $0, head                        # setamos head como 0
         
         pushl   $msgSemRegs
         call    printf
-        addl    $4, %esp
+        addl    $4, %esp                        # mensagem de arquivo vazio
 
         RET
 
 badfile:
+    # erro no arquivo
+
     movl    %eax, %ebx
     movl    $1, %eax
     int     $0x80
