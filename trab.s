@@ -1,5 +1,5 @@
 .section .data
-    msgAbertura:            .asciz  "\nControle de cadastro de imóveis para locação\n"
+    msgAbertura:            .asciz  "\nControle de cadastro de imóveis para locação"
     menu:                   .asciz  "\n\nSelecione uma das opções: \n[1] Inserir um registro\n[2] Consultar um registro\n[3] Remover um registro\n[4] Mostrar relatório\n[5] Gravar registro novo\n[6] Recuperar registro\n[7] Sair\n"
     opInvalida:             .asciz  "\nSelecione uma opção válida: \n"
 
@@ -23,7 +23,7 @@
     mostraNome:             .asciz  "\nNome:    %s"
     mostraCelular:          .asciz  "Celular: %s"
     mostraTipoImovel:       .asciz  "Tipo do Imóvel: %s"
-    mostraEndereco:         .asciz  "Endereco: "
+    mostraEndereco:         .asciz  "Endereco"
     mostraCidade:           .asciz  "\nCidade:  %s"
     mostraBairro:           .asciz  "Bairro:  %s"
     mostraNQuartos:         .asciz  "Quartos: %d"
@@ -40,12 +40,10 @@
     tamCidade:              .int 32
     tamBairro:              .int 32
     tamQuartos:             .int 4
-    # De novo 4 bytes aqui
     tamGaragem:             .int 4
     tamMetragem:            .int 4
     tamAluguel:             .int 4
-
-    tamReg:                 .int   156
+    tamReg:                 .int 156
     # tamRegArq:              .int   156
 
     bytesAteQuartos:         .int 148
