@@ -794,7 +794,6 @@ relatorio:
 
     _fimRelatorio:
         RET
-
 abrirArquivoLeitura:
     movl    $5, %eax
     movl    $nomeArq, %ebx         
