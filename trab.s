@@ -1,38 +1,49 @@
 .section .data
-    msgAbertura:            .asciz  "\nControle de cadastro de imóveis para locação\n"
-    menu:                   .asciz  "\n\nSelecione uma das opções: \n[1] Inserir um registro\n[2] Consultar um registro\n[3] Remover um registro\n[4] Mostrar relatório\n[5] Gravar registro novo\n[6] Recuperar registro\n[7] Sair\n"
-    opInvalida:             .asciz  "\nSelecione uma opção válida: \n"
 
+    #######################################################################
+    # PRINTS
+
+    msgAbertura:            .asciz  "\nControle de cadastro de imóveis para locação\n"
+    menu:                   .asciz  "\n\nMENU\nSelecione uma das opções: \n[1] Inserir um registro\n[2] Consultar um registro\n[3] Remover um registro\n[4] Mostrar relatório\n[5] Gravar registros\n[6] Recuperar registros\n[7] Sair\nOpção: "
+    opInvalida:             .asciz  "\nSelecione uma opção válida: \n"
 
     msgNome:                .asciz  "\nDigite o nome completo: " #32 bytes
     msgCelular:             .asciz  "\nDigite o telefone celular: " #16bytes
     msgTipoImovel:          .asciz  "\nEscolha o tipo de imóvel [casa/apartamento]: " #16 bytes
     msgEndereco:            .asciz  "\nInforme o endereço: " #64 bytes
-    msgCidade:              .asciz  "\nCidade: " #32 
-    msgBairro:              .asciz  "\nBairro: " #32
+    msgCidade:              .asciz  "\n Cidade: " #32 
+    msgBairro:              .asciz  "\n Bairro: " #32
     msgNQuartos:            .asciz  "\nInforme o número de quartos simples: " #4bytes
     msgNSuites:             .asciz  "\nInforme o número de suítes: " #4bytes
     msgGaragem:             .asciz  "\nTem garagem? [S/N]: " #4bytes
     msgMetragem:            .asciz  "\nQual a metragem total? " #4bytes
-    msgAluguel:             .asciz  "\nQual o valor do aluguel? " #4bytes
-    
-    msgSemRegs:             .asciz  "\nNão há registros\n"
-    msgPedeReg:             .asciz  "\nDigite um número de quartos para consulta: "
+    msgAluguel:             .asciz  "\nQual o valor do aluguel? " #4bytes    
 
-    msgNumReg:              .asciz  "\n\nRegistro: %d"
+    msgNumReg:              .asciz  "\n\nREGISTRO: %d"
     mostraNome:             .asciz  "\nNome:    %s"
     mostraCelular:          .asciz  "Celular: %s"
     mostraTipoImovel:       .asciz  "Tipo do Imóvel: %s"
-    mostraEndereco:         .asciz  "Endereco: "
-    mostraCidade:           .asciz  "\nCidade:  %s"
-    mostraBairro:           .asciz  "Bairro:  %s"
+    mostraEndereco:         .asciz  "Endereço: "
+    mostraCidade:           .asciz  "\n Cidade:  %s"
+    mostraBairro:           .asciz  " Bairro:  %s"
     mostraNQuartos:         .asciz  "Quartos: %d"
-    mostraNSuites:          .asciz  "\nSuites:  %d"
+    mostraNSuites:          .asciz  "\nSuítes:  %d"
     mostraGaragem:          .asciz  "\nGaragem? %s"
     mostraMetragem:         .asciz  "Metragem Total: %d"
     mostraAluguel:          .asciz  "\nValor do aluguel: %d"
     mostraNTotal:           .asciz  "\nTotal de quartos e suítes: %d\n"
 
+    msgSemRegs:             .asciz  "\nNão há registros\n"
+    msgRegNaoEncontrado:    .asciz  "\nO registro desejado não foi encontrado.\n"
+    msgRegRemovido:         .asciz  "\nRegistro removido com sucesso!\n"
+    msgGravacaoArquivo:     .asciz  "\nGravação no arquivo concluída com sucesso!\n"
+    msgRecuperacao:         .asciz  "\nRecuperação de registros concluída com sucesso!\n"
+
+    msgPedeNQuartos:        .asciz  "\nDigite um número de quartos para consulta: "
+    msgPedeIndiceReg:       .asciz  "\nDigite o número do registro que deseja remover: " 
+
+    #######################################################################
+    # VARIÁVEIS
 
     tamNome:                .int 32
     tamCelular:             .int 16
@@ -47,78 +58,48 @@
     # tamTotalQuartos       4 bytes 
 
     tamReg:                 .int   156
-    # tamRegArq:              .int   156
 
-    bytesAteQuartos:         .int 148
-    bytesAteProximo:          .int 152
+    bytesAteQuartos:        .int 148
+    bytesAtePonteiro:       .int 152
 
     tipoNum: 			    .asciz 	"%d"
-	imprimeTipoNum: 	    .asciz 	"%d\n"
 	Char:			        .asciz	"%c"
 	Str:			        .asciz	"%s"
-	# pulaLinha: 		    	.asciz 	"\n"
 
     op:                     .int   0
     removeReg:              .int   0
     limpaScan:              .space 10
-    tamList:                .int   0
 
-	head:			        .space  4	# cabeça da lista
-	inicioReg:			    .space	4	# campo inicial do registro que está sendo inserido no momento
-	regAtual:       	    .space  4 	# registro que está sendo consultado
-	pai:					.space	4	# registro antecessor 
-	filho:					.space	4	# registro sucessor
-	enderecoRemove:			.space 	4	# endereço do registro para remover
-    tail:   			    .space 	4	# último endereço do registro
+	head:			        .space  4	
+    tail:   			    .space 	4
+	pai:					.space	4	
+	filho:					.space	4	
+	
+    inicioReg:			    .space	4
+	regAtual:       	    .space  4 
+	enderecoRegRemocao:		.space 	4	
 
     reg:                    .space 156
-    descritor:			    .int 	0
 	totalQuartos:			.int 	0
-	posicaoAtual: 		    .int	0	
-	iteracao:			    .int	0	# número da iteração atual, será usada na remoção
-	nomeArq:			    .asciz	"registros.txt"
+
+	indice:			        .int	0
 	nQuartosConsulta:       .int	0
+    numRegRemocao:          .int    0
 
-    SYS_EXIT: 	            .int 1
-	SYS_FORK: 	            .int 2
-	SYS_READ: 	            .int 3
-	SYS_WRITE: 	            .int 4
-	SYS_OPEN: 	            .int 5
-	SYS_CLOSE: 	            .int 6
-	SYS_CREAT: 	            .int 8
+	nomeArq:			    .asciz	"registrosImobiliaria.txt"
 
-	# Constantes de configuração do parametro flag da chamada open()
-	O_RDONLY:               .int 0x0000 # somente leitura
-	O_WRONLY:               .int 0x0001 # somente escrita
-	O_RDWR:                 .int 0x0002 # leitura e escrita
-	O_CREAT:                .int 0x0040 # cria o arquivo na abertura, caso ele não exista
-	O_EXCL:                 .int 0x0080 # força a criação
-	O_APPEND:               .int 0x0400 # posiciona o cursor do arquivo no final, para adição
-	O_TRUNC:                .int 0x0200 # reseta o arquivo aberto, deixando com tamanho 0 (zero)
-
-	S_IRWXU:                .int 0x01C0# user (file owner) has read, write and execute permission
-	S_IRUSR:                .int 0x0100 # user has read permission
-	S_IWUSR:                .int 0x0080 # user has write permission
-	S_IXUSR:                .int 0x0040 # user has execute permission
-	S_IRWXG:                .int 0x0038 # group has read, write and execute permission
-	S_IRGRP:                .int 0x0020 # group has read permission
-	S_IWGRP:                .int 0x0010 # group has write permission
-	S_IXGRP:                .int 0x0008 # group has execute permission
-	S_IRWXO:                .int 0x0007 # others have read, write and execute permission
-	S_IROTH:                .int 0x0004 # others have read permission
-	S_IWOTH:                .int 0x0002 # others have write permission
-	S_IXOTH:                .int 0x0001 # others have execute permission
-	S_NADA:                 .int 0x0000 # não altera a situação
-
+.section .bss
+    .lcomm  arquivoHandle, 4
 
 .section    .text
 .globl      _start
 _start:
     pushl   $msgAbertura
     call    printf
-    addl    $4, %esp
-	# call	recuperaReg
-	call	menuOpcoes
+    addl    $4, %esp            # mensagem de abertura  
+
+	call	recuperar           # recupera registros do arquivo
+	call	menuOpcoes          # chama menu principal
 
 _fim:
 	pushl   $0
@@ -129,7 +110,7 @@ menuOpcoes:
     call    printf
     pushl   $op
     pushl   $tipoNum
-    call    scanf
+    call    scanf               # pede opção do menu
 
     addl    $12, %esp
 
@@ -151,7 +132,7 @@ menuOpcoes:
 
     # GRAVAR
     cmpl    $5, op
-    je      _salvaReg
+    je      _gravaReg
 
     # RECUPERAR
     cmpl    $6, op
@@ -161,37 +142,36 @@ menuOpcoes:
     cmpl    $7, op
     je      _fim
 
-    pushl   $opInvalida
+    # Se chegou até aqui, opção inválida
+    pushl   $opInvalida 
     call    printf
     addl    $4, %esp
     jmp     menuOpcoes
 
-    RET
-
     _insereReg:
-        call    limpaScanf
-        call    leReg
+        call    limpaBuffer         # limpa buffer para poder utilizar o fgets
+        call    inserir
         jmp     menuOpcoes
 
     _consultaReg:   
-        call    limpaScanf
         call    consulta
         jmp     menuOpcoes
 
     _removeReg:
-        call    limpaScanf
         call    remove
         jmp     menuOpcoes
 
     _mostraRelatorio:
-        call    limpaScanf
         call    relatorio
         jmp     menuOpcoes
 
-    _salvaReg:
-        RET
+    _gravaReg:
+        call    gravar
+        jmp     menuOpcoes
+
     _recuperaReg:
-        RET
+        call    recuperar
+        jmp     menuOpcoes
 
 
 insereEOrdena:
@@ -212,12 +192,12 @@ insereEOrdena:
     jle     _insereHead
 
     movl    pai, %edi
-    addl    bytesAteProximo, %edi
+    addl    bytesAtePonteiro, %edi
     cmpl    $0, (%edi)
     je      _insereTail
 
     movl    pai, %edi
-    addl    bytesAteProximo, %edi
+    addl    bytesAtePonteiro, %edi
     movl    (%edi), %eax
     movl    %eax, filho
 
@@ -228,7 +208,7 @@ insereEOrdena:
         movl    pai, %edi
         movl    filho, %ebx
 
-        addl    bytesAteProximo, %edi
+        addl    bytesAtePonteiro, %edi
 
         addl    bytesAteQuartos, %ebx
         movl    (%ecx), %eax
@@ -239,22 +219,20 @@ insereEOrdena:
         movl    %ebx, pai
 
         movl    pai, %edi
-        addl    bytesAteProximo, %edi
+        addl    bytesAtePonteiro, %edi
         cmpl    $0, (%edi)
         je      _insereTail
 
-        movl    (%ebx), %eax
+        movl    (%edi), %eax
         movl    %eax, filho
         jmp     _loopInsercao
-
-    # RET
 
     _inserePrimeiroElemento:
 
         movl    inicioReg, %ecx
         movl    %ecx, head
         movl    %ecx, tail
-        addl    bytesAteProximo, %ecx
+        addl    bytesAtePonteiro, %ecx
         movl    $0, (%ecx)
 
         RET
@@ -262,7 +240,7 @@ insereEOrdena:
     _insereHead:
 
         movl    inicioReg, %ecx
-        addl    bytesAteProximo, %ecx
+        addl    bytesAtePonteiro, %ecx
 
         movl    head, %edi
         movl    %edi, (%ecx)
@@ -273,35 +251,33 @@ insereEOrdena:
         RET
 
     _insereTail:
-
         movl    pai, %edi
         movl    inicioReg, %ebx
 
-        addl    bytesAteProximo, %edi
+        addl    bytesAtePonteiro, %edi
         movl    %ebx, (%edi)
         movl    %ebx, tail
 
-        addl    bytesAteProximo, %ebx
+        addl    bytesAtePonteiro, %ebx
         movl    $0, (%ebx)
 
         RET
 
     _insereAntesFilho:
-
         movl    pai, %edi
         movl    filho, %ebx
         movl    inicioReg, %ecx
         
-        addl    bytesAteProximo, %edi
+        addl    bytesAtePonteiro, %edi
         movl    %ecx, (%edi)
 
-        addl    bytesAteProximo, %ecx
+        addl    bytesAtePonteiro, %ecx
         movl    %ebx, (%ecx)
 
         RET
 
 
-leReg:
+inserir:
     pushl	tamReg
     call	malloc
     movl	%eax, inicioReg
@@ -520,8 +496,8 @@ leReg:
     RET
 
 
-limpaScanf:
-	# LIMPA BUFFER DE LEITURA DAS FUNÇÕES SCANF E FGETS	
+limpaBuffer:
+	# LIMPA BUFFER DE LEITURA 
 
 	pushl	$limpaScan
 	pushl   $Char
@@ -529,8 +505,93 @@ limpaScanf:
 	addl    $8, %esp 
 	RET
 
+printReg:
+    # NOME
+    pushl   %edi
+    pushl   $mostraNome
+    call    printf
+    addl    $8, %esp
+    addl    tamNome, %edi
+
+    # CELULAR
+    pushl   %edi
+    pushl   $mostraCelular
+    call    printf
+    addl    $8, %esp
+    addl    tamCelular, %edi
+
+    # TIPO IMÓVEL
+    pushl   %edi
+    pushl   $mostraTipoImovel
+    call    printf
+    addl    $8, %esp
+    addl    tamTipoImovel, %edi
+
+    # ENDEREÇO
+    pushl   $mostraEndereco
+    call    printf
+    addl    $4, %esp
+
+    # CIDADE
+    pushl   %edi
+    pushl   $mostraCidade
+    call    printf
+    addl    $8, %esp
+    addl    tamCidade, %edi
+
+    # BAIRRO
+    pushl   %edi
+    pushl   $mostraBairro
+    call    printf
+    addl    $8, %esp
+    addl    tamBairro, %edi
+    
+    # NÚMERO DE QUARTOS
+    pushl   (%edi)
+    pushl   $mostraNQuartos
+    call    printf
+    addl    $8, %esp
+    addl    tamQuartos, %edi
+
+    # NÚMERO DE SUÍTES
+    pushl   (%edi)
+    pushl   $mostraNSuites
+    call    printf
+    addl    $8, %esp
+    addl    tamQuartos, %edi
+    
+    # GARAGEM
+    pushl   %edi
+    pushl   $mostraGaragem
+    call    printf
+    addl    $8, %esp
+    addl    tamGaragem, %edi
+
+    # METRAGEM
+    pushl   (%edi)
+    pushl   $mostraMetragem
+    call    printf
+    addl    $8, %esp
+    addl    tamMetragem, %edi
+
+    # ALUGUEL
+    pushl   (%edi)
+    pushl   $mostraAluguel
+    call    printf
+    addl    $8, %esp
+    addl    tamAluguel, %edi
+
+    # TOTAL QUARTOS + SUÍTES
+    pushl   (%edi)
+    pushl   $mostraNTotal
+    call    printf
+    addl    $8, %esp
+    addl    tamQuartos, %edi
+    
+    RET
+
 consulta:
-    pushl   $msgPedeReg
+    pushl   $msgPedeNQuartos
     call    printf
     addl    $4, %esp
 
@@ -557,7 +618,7 @@ consulta:
 
     _maisUmReg:
         movl    regAtual, %edi
-        addl    bytesAteProximo, %edi
+        addl    bytesAtePonteiro, %edi
         cmpl    $0, (%edi)
         je      _fimConsulta
 
@@ -568,87 +629,7 @@ consulta:
     _mostraReg:
         movl    regAtual, %edi
 
-        # NOME
-        pushl   %edi
-        pushl   $mostraNome
-        call    printf
-        addl    $8, %esp
-        addl    tamNome, %edi
-
-        # CELULAR
-        pushl   %edi
-        pushl   $mostraCelular
-        call    printf
-        addl    $8, %esp
-        addl    tamCelular, %edi
-
-        # TIPO IMÓVEL
-        pushl   %edi
-        pushl   $mostraTipoImovel
-        call    printf
-        addl    $8, %esp
-        addl    tamTipoImovel, %edi
-
-        # ENDEREÇO
-        pushl   $mostraEndereco
-        call    printf
-        addl    $4, %esp
-
-        # CIDADE
-        pushl   %edi
-        pushl   $mostraCidade
-        call    printf
-        addl    $8, %esp
-        addl    tamCidade, %edi
-
-        # BAIRRO
-        pushl   %edi
-        pushl   $mostraBairro
-        call    printf
-        addl    $8, %esp
-        addl    tamBairro, %edi
-        
-        # NÚMERO DE QUARTOS
-        pushl   (%edi)
-        pushl   $mostraNQuartos
-        call    printf
-        addl    $8, %esp
-        addl    tamQuartos, %edi
-
-        # NÚMERO DE SUÍTES
-        pushl   (%edi)
-        pushl   $mostraNSuites
-        call    printf
-        addl    $8, %esp
-        addl    tamQuartos, %edi
-        
-        # GARAGEM
-        pushl   %edi
-        pushl   $mostraGaragem
-        call    printf
-        addl    $8, %esp
-        addl    tamGaragem, %edi
-
-        # METRAGEM
-        pushl   (%edi)
-        pushl   $mostraMetragem
-        call    printf
-        addl    $8, %esp
-        addl    tamMetragem, %edi
-
-        # ALUGUEL
-        pushl   (%edi)
-        pushl   $mostraAluguel
-        call    printf
-        addl    $8, %esp
-        addl    tamAluguel, %edi
-
-        # TOTAL QUARTOS + SUÍTES
-        pushl   (%edi)
-        pushl   $mostraNTotal
-        call    printf
-        addl    $8, %esp
-        addl    tamQuartos, %edi
+        call    printReg
 
         jmp     _maisUmReg
 
@@ -660,111 +641,134 @@ consulta:
 
     _fimConsulta:
         RET
-    
+
+remove:
+    call    relatorio
+
+    cmpl    $0, head
+    je      _listaVazia
+
+    pushl   $msgPedeIndiceReg
+    call    printf
+    addl    $4, %esp
+
+    pushl   $numRegRemocao
+    pushl   $tipoNum
+    call    scanf
+    addl    $8, %esp
+
+    cmpl    $0, numRegRemocao
+    je      _removeHead
+
+    movl    $0, indice
+    movl    head, %edi
+    movl    %edi, pai
+
+    addl    bytesAtePonteiro, %edi 
+    movl    (%edi), %ebx
+    movl    %ebx, filho
+
+    decl    numRegRemocao
+
+    _loopRemocao:
+        cmpl    $0, filho 
+        je      _falhaRemocao
+
+        movl    indice, %eax
+        cmpl    %eax, numRegRemocao
+        je      _removeProximo
+
+        incl    %eax
+        movl    %eax, indice
+
+        movl    pai, %edi
+        movl    filho, %ebx
+        movl    %ebx, pai
+        addl    bytesAtePonteiro, %ebx
+        movl    (%ebx), %ecx
+        movl    %ecx, filho
+
+        jmp     _loopRemocao
+
+    _removeHead:
+        movl    head, %edi
+        movl    %edi, enderecoRegRemocao
+        addl    bytesAtePonteiro, %edi
+        movl    (%edi), %eax
+        movl    %eax, head
+
+        pushl   enderecoRegRemocao
+        call    free
+        addl    $4, %esp
+
+        pushl   $msgRegRemovido
+        call    printf
+        addl    $4, %esp
+
+        RET
+
+    _removeProximo:
+        movl    filho, %edi
+        movl    %edi, enderecoRegRemocao
+        addl    bytesAtePonteiro, %edi
+        movl    (%edi), %eax
+        movl    %eax, filho
+
+        movl    pai, %ecx
+        addl    bytesAtePonteiro, %ecx
+        movl    filho, %edi
+        movl    %edi, (%ecx)
+
+        pushl   enderecoRegRemocao
+        call    free
+        addl    $4, %esp
+
+        cmpl    $0, %eax
+        jne      _fimRemove
+
+        movl    pai, %edi
+        movl    %edi, tail
+
+        pushl   $msgRegRemovido
+        call    printf
+        addl    $4, %esp
+
+        jmp     _fimRemove
+
+    _falhaRemocao:
+        pushl   $msgRegNaoEncontrado
+        call    printf
+        addl    $4, %esp
+
+        jmp     _fimRemove
+
+    _listaVazia:
+    _fimRemove:
+        RET
 
 relatorio:
 
     movl    head, %edi
-    movl    $0, iteracao
+    movl    $0, indice
 
     movl    $0, %ebx
     cmpl    %edi, %ebx
     je      _semRegistros
 
     _loopRelatorio:
-        pushl   iteracao
+        pushl   indice
         pushl   $msgNumReg
         call    printf
         addl    $8, %esp
 
-        # NOME
-        pushl   %edi
-        pushl   $mostraNome
-        call    printf
-        addl    $8, %esp
-        addl    tamNome, %edi
-
-        # CELULAR
-        pushl   %edi
-        pushl   $mostraCelular
-        call    printf
-        addl    $8, %esp
-        addl    tamCelular, %edi
-
-        # TIPO IMÓVEL
-        pushl   %edi
-        pushl   $mostraTipoImovel
-        call    printf
-        addl    $8, %esp
-        addl    tamTipoImovel, %edi
-
-        # ENDEREÇO
-        pushl   $mostraEndereco
-        call    printf
-        addl    $4, %esp
-        
-        # CIDADE 
-        pushl   %edi
-        pushl   $mostraCidade
-        call    printf
-        addl    $8, %esp
-        addl    tamCidade, %edi
-
-        # BAIRRO
-        pushl   %edi
-        pushl   $mostraBairro
-        call    printf
-        addl    $8, %esp
-        addl    tamBairro, %edi
-
-        # QUARTOS
-        pushl   (%edi)
-        pushl   $mostraNQuartos
-        call    printf
-        addl    $8, %esp
-        addl    tamQuartos, %edi
-
-        # SUITES
-        pushl   (%edi)
-        pushl   $mostraNSuites
-        call    printf
-        addl    $8, %esp
-        addl    tamQuartos, %edi
-
-        # GARAGEM 
-        pushl   %edi
-        pushl   $mostraGaragem
-        call    printf
-        addl    $8, %esp
-        addl    tamGaragem, %edi
-
-        # METRAGEM
-        pushl   (%edi)
-        pushl   $mostraMetragem
-        call    printf
-        addl    $8, %esp
-        addl    tamMetragem, %edi
-
-        # ALUGUEL
-        pushl   (%edi)
-        pushl   $mostraAluguel
-        call    printf
-        addl    $8, %esp
-        addl    tamAluguel, %edi
-
-        # TOTAL QUARTOS + SUÍTES
-        pushl   (%edi)
-        pushl   $mostraNTotal
-        call    printf
-        addl    $8, %esp
-        addl    tamQuartos, %edi
+        call    printReg
 
         _proximoRegRelatorio:
             movl    (%edi), %eax
             cmpl    $0, %eax
             je      _fimRelatorio
 
-            addl    $1, iteracao
+            addl    $1, indice
 
             movl    (%edi), %edi
 
@@ -778,4 +782,135 @@ relatorio:
 
     _fimRelatorio:
         RET
+
+abrirArquivoLeitura:
+    movl    $5, %eax
+    movl    $nomeArq, %ebx         
+    movl    $02100, %ecx            # somente leitura
+    movl    $0777, %edx            # todos os acessos para todos
+    int     $0x80
+    test    %eax, %eax              # verifica se o arquivo é válido
+    js      badfile
+    movl    %eax, arquivoHandle    # identificador do arquivo1 em
+    
+    RET
+
+abrirArquivoEscrita:
+    movl    $5, %eax
+    movl    $nomeArq, %ebx         
+    movl    $01101, %ecx            # somente escrita, cria arquivo se não existe
+                                    # e escreve no final do arquivo
+    movl    $0777, %edx             # somente escrita para todos
+    int     $0x80
+    test    %eax, %eax              # verifica se o arquivo é válido
+    js      badfile
+    movl    %eax, arquivoHandle    # identificador do arquivo1 em
+	
+    RET
+
+fecharArquivo:
+    movl    $6, %eax
+    movl    arquivoHandle, %ebx
+    int     $0x80
+
+    RET
+
+gravar:
+    call    abrirArquivoEscrita
+    
+    movl    head, %edi
+    movl    %edi, regAtual
+
+    _loopGravacao:
+        cmpl    $0, regAtual
+        je      _fimGravacao
+
+        movl    $4, %eax
+        movl    arquivoHandle, %ebx
+        movl    regAtual, %ecx
+        movl    tamReg, %edx
+        int     $0x80
+
+        movl    regAtual, %edi
+        addl    bytesAtePonteiro, %edi
+        movl    (%edi), %edi
+        movl    %edi, regAtual
         
+        jmp     _loopGravacao
+
+    _fimGravacao:
+        call    fecharArquivo
+
+        pushl   $msgGravacaoArquivo
+        call    printf
+        addl    $4, %esp
+
+        RET
+
+recuperar:
+    call    abrirArquivoLeitura
+    movl    $0, indice
+
+    _loopRecuperacao:
+        pushl   tamReg
+        call    malloc
+        movl    %eax, inicioReg
+        addl    $4, %esp
+
+        movl    $3, %eax
+        movl    arquivoHandle, %ebx
+        movl    inicioReg, %ecx
+        movl    tamReg, %edx
+        int     $0x80
+
+        cmpl    $0, %eax
+        je      _fimRecuperacao
+
+        movl    inicioReg, %edi
+        addl    bytesAtePonteiro, %edi
+        movl    $0, (%edi)
+
+        cmpl    $0, indice
+        je      _defineHead
+
+        call insereEOrdena
+
+        jmp _loopRecuperacao
+
+    _defineHead:
+        movl    inicioReg, %edi
+        movl    %edi, head
+        movl    %edi, tail
+
+        addl    bytesAtePonteiro, %edi
+        movl    $0, (%edi)
+
+        incl    indice
+
+        jmp     _loopRecuperacao
+
+    _fimRecuperacao:
+        call    fecharArquivo
+
+        cmpl    $0, indice
+        je      _arquivoVazio
+
+        pushl   $msgRecuperacao
+        call    printf
+        addl    $4, %esp
+
+        RET
+
+    _arquivoVazio:
+        movl    $0, head
+        
+        pushl   $msgSemRegs
+        call    printf
+        addl    $4, %esp
+
+        RET
+
+badfile:
+    movl    %eax, %ebx
+    movl    $1, %eax
+    int     $0x80
